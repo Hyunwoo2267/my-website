@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캠퍼스당근 - 데모</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .screen-content {
+            height: calc(100% - 44px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 화면 전환 애니메이션 */
+        .screen-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        .screen-view.hidden {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .screen-view.slide-left {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 로그인/회원가입 화면 */
+        .auth-screen {
+            padding: 40px 30px;
+            text-align: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .auth-form {
+            margin-bottom: 120px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-label {
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: block;
+            opacity: 0.9;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .register-link {
+            font-size: 14px;
+            opacity: 0.8;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* 회원가입 화면 */
+        .register-screen {
+            padding: 40px 30px;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            height: 100%;
+            overflow-y: hidden;
+        }
+
+        .back-btn {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        /* 메인 화면 */
+        .main-screen {
+            height: 100%;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-actions {
+            padding: 30px 20px 100px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .action-card.seller {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .action-card.buyer {
+            border-color: #059669;
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+            color: white;
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .action-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .action-desc {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .trade-methods {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 20px 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .method-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .method-item:last-child {
+            border-bottom: none;
+        }
+
+        .method-item:hover {
+            background: #f8f9ff;
+            margin: 0 -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 8px;
+        }
+
+        .method-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .smart-contract {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .direct-trade {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            margin-bottom: 15px;
+        }
+
+        .escrow-trade {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            margin-bottom: 15px;
+        }
+
+        .method-text h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .method-text p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .arrow {
+            color: #ccc;
+            font-size: 18px;
+        }
+
+        /* 상품 목록 화면 */
+        .product-list-screen {
+            height: 100%;
+            background: #f8f9fa;
+        }
+
+        .search-header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 16px;
+            background: #f5f5f5;
+        }
+
+        .product-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding-bottom: 100px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            height: 120px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .product-info {
+            padding: 12px;
+        }
+
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 5px;
+        }
+
+        .product-location {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 거래 과정 화면 */
+        .trade-screen {
+            height: 100%;
+            background: #f8f9fa;
+        }
+
+        .progress-header {
+            background: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 2px;
+            width: 33%;
+            transition: width 0.5s ease;
+        }
+
+        .step-content {
+            padding: 30px 20px 100px;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #4f46e5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .verification-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .verification-item:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            color: #059669;
+            font-size: 20px;
+        }
+
+        .pending-icon {
+            color: #f59e0b;
+            font-size: 20px;
+        }
+
+        /* 만족도 조사 화면 */
+        .satisfaction-screen {
+            height: 100%;
+            background: #f8f9fa;
+        }
+
+        .celebration {
+            font-size: 48px;
+            margin: 10px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .content {
+            padding: 30px 20px 100px;
+        }
+
+        .survey-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trade-info {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .trade-item {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .trade-user {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 별점 평가 */
+        .rating-section {
+            margin-bottom: 25px;
+        }
+
+        .rating-label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            font-size: 32px;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .star.active {
+            color: #ffc107;
+            transform: scale(1.1);
+        }
+
+        .star:hover {
+            transform: scale(1.2);
+        }
+
+        .rating-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* 만족도 이모지 */
+        .emoji-rating {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .emoji-option {
+            text-align: center;
+            cursor: pointer;
+            padding: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .emoji-option:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .emoji-option.selected {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .emoji {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .emoji-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* 태그 선택 */
+        .tag-section {
+            margin: 20px 0;
+        }
+
+        .tag-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tag-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tag-item:hover {
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .tag-item.selected {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        /* 텍스트 입력 */
+        .textarea-group {
+            margin: 20px 0;
+        }
+
+        .textarea-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            display: block;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 버튼 */
+        .btn-primary1 {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-primary1:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 2px solid #6b7280;
+            color: #6b7280;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #6b7280;
+            color: white;
+        }
+
+        /* 완료 화면 */
+        .completion-screen {
+            text-align: center;
+            padding: 50px 20px;
+            background: white;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .completion-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            animation: fadeInScale 1s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .completion-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .completion-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* 하단 네비게이션 */
+        .bottom-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 35px;
+            background: white;
+            padding: 4px 20px 4px;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            border-radius: 16px;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .nav-item.active {
+            color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+            
+        /* 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            top: 600px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* 로딩 스피너 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone">
+            <div class="screen">
+                <div class="status-bar">
+                    <span id="currentTime">9:41</span>
+                    <span>🔋 100%</span>
+                </div>
+                
+                <div class="screen-content">
+                    <!-- 로그인 화면 -->
+                    <div class="screen-view auth-screen" id="authScreen">
+                        <div class="logo">🥕 캠퍼스당근</div>
+                        <div class="subtitle">안전한 교내 거래 플랫폼</div>
+                        
+                        <div class="auth-form">
+                            <div class="input-group">
+                                <label class="input-label">학교 이메일</label>
+                                <input type="email" class="input-field" placeholder="student@university.ac.kr" id="emailInput">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">비밀번호</label>
+                                <input type="password" class="input-field" placeholder="••••••••" id="passwordInput">
+                            </div>
+                            <button class="btn-primary" onclick="login()" id="loginBtn">로그인</button>
+                        </div>
+                        
+                        <p style="font-size: 14px; opacity: 0.8;">
+                            계정이 없으신가요? <span class="register-link" onclick="showRegister()">회원가입</span>
+                        </p>
+                    </div>
+
+                    <!-- 회원가입 화면 -->
+                    <div class="screen-view register-screen hidden" id="registerScreen">
+                        <div class="back-btn" onclick="showAuth()">‹</div>
+                        <div class="logo">🥕 캠퍼스당근</div>
+                        <div class="subtitle">회원가입</div>
+                        
+                        <div class="auth-form">
+                            <div class="input-group">
+                                <label class="input-label">이름</label>
+                                <input type="text" class="input-field" placeholder="홍길동">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">학교 이메일</label>
+                                <input type="email" class="input-field" placeholder="student@university.ac.kr">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">학번</label>
+                                <input type="text" class="input-field" placeholder="202012345">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">비밀번호</label>
+                                <input type="password" class="input-field" placeholder="••••••••">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">비밀번호 확인</label>
+                                <input type="password" class="input-field" placeholder="••••••••">
+                            </div>
+                            <button class="btn-primary" onclick="register()">가입하기</button>
+                        </div>
+                    </div>
+
+                    <!-- 메인 화면 -->
+                    <div class="screen-view main-screen hidden" id="mainScreen">
+                        <div class="header">
+                            <h1>백석대학교 🏫</h1>
+                            <p>오늘도 안전한 거래 되세요</p>
+                        </div>
+
+                        <div class="main-actions">
+                            <div class="action-grid">
+                                <div class="action-card seller" onclick="showSellerFlow()">
+                                    <div class="action-icon">📝</div>
+                                    <div class="action-title">판매자</div>
+                                    <div class="action-desc">물품 등록하기</div>
+                                </div>
+                                <div class="action-card buyer" onclick="showProductList()">
+                                    <div class="action-icon">🛒</div>
+                                    <div class="action-title">구매자</div>
+                                    <div class="action-desc">상품 둘러보기</div>
+                                </div>
+                            </div>
+
+                            <div class="trade-methods">
+                                <div class="section-title">거래 방식 선택</div>
+                                
+                                <div class="method-item" onclick="selectTradeMethod('smart')">
+                                    <div class="method-info">
+                                        <div class="method-icon smart-contract">🔒</div>
+                                        <div class="method-text">
+                                            <h3>스마트 계약 에스크로</h3>
+                                            <p>AI 중개 시스템으로 안전한 거래</p>
+                                        </div>
+                                    </div>
+                                    <div class="arrow">›</div>
+                                </div>
+
+                                <div class="method-item" onclick="selectTradeMethod('direct')">
+                                    <div class="method-info">
+                                        <div class="method-icon direct-trade">🤝</div>
+                                        <div class="method-text">
+                                            <h3>직접 거래</h3>
+                                            <p>GPS 인증 후 현장 거래</p>
+                                        </div>
+                                    </div>
+                                    <div class="arrow">›</div>
+                                </div>
+
+                                <div class="method-item" onclick="selectTradeMethod('escrow')">
+                                    <div class="method-info">
+                                        <div class="method-icon escrow-trade">🏦</div>
+                                        <div class="method-text">
+                                            <h3>입금 약속</h3>
+                                            <p>예치금 보증 거래</p>
+                                        </div>
+                                    </div>
+                                    <div class="arrow">›</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 상품 목록 화면 -->
+                    <div class="screen-view product-list-screen hidden" id="productListScreen">
+                        <div class="search-header">
+                            <input type="text" class="search-box" placeholder="원하는 상품을 검색해보세요" onkeyup="searchProducts(this.value)">
+                        </div>
+
+                        <div class="product-grid" id="productGrid">
+                            <!-- 상품들이 여기에 동적으로 생성됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 거래 과정 화면 -->
+                    <div class="screen-view trade-screen hidden" id="tradeScreen">
+                        <div class="progress-header">
+                            <h2 id="tradeTitle">거래 진행 상황</h2>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <p id="progressText">1/3 단계 완료</p>
+                        </div>
+
+                        <div class="step-content" id="stepContent">
+                            <!-- 단계별 내용이 여기에 동적으로 생성됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 만족도 조사 화면 -->
+                    <div class="screen-view satisfaction-screen hidden" id="satisfactionScreen">
+                        <div class="header">
+                            <div class="celebration">🎉</div>
+                            <h1>거래 완료!</h1>
+                            <p>소중한 의견을 들려주세요</p>
+                        </div>
+
+                        <div class="content">
+                            <!-- 거래 정보 -->
+                            <div class="survey-card">
+                                <div class="trade-info">
+                                    <div class="trade-item">📱 아이폰 14 프로</div>
+                                    <div class="trade-user">판매자: 김철수님</div>
+                                </div>
+                            </div>
+
+                            <!-- 거래 상대방 평가 -->
+                            <div class="survey-card">
+                                <div class="section-title">
+                                    👤 거래 상대방 평가
+                                </div>
+                                
+                                <div class="rating-section">
+                                    <div class="rating-label">거래 상대방은 어떠셨나요?</div>
+                                    <div class="star-rating" data-rating="partner">
+                                        <span class="star" data-value="1">⭐</span>
+                                        <span class="star" data-value="2">⭐</span>
+                                        <span class="star" data-value="3">⭐</span>
+                                        <span class="star" data-value="4">⭐</span>
+                                        <span class="star" data-value="5">⭐</span>
+                                    </div>
+                                    <div class="rating-text" id="partnerRatingText">별점을 선택해주세요</div>
+                                </div>
+
+                                <div class="tag-section">
+                                    <div class="rating-label">어떤 점이 좋았나요? (복수 선택 가능)</div>
+                                    <div class="tag-grid">
+                                        <div class="tag-item" onclick="toggleTag(this)">시간 약속 준수</div>
+                                        <div class="tag-item" onclick="toggleTag(this)">친절한 응대</div>
+                                        <div class="tag-item" onclick="toggleTag(this)">상품 상태 양호</div>
+                                        <div class="tag-item" onclick="toggleTag(this)">빠른 응답</div>
+                                        <div class="tag-item" onclick="toggleTag(this)">정확한 정보 제공</div>
+                                        <div class="tag-item" onclick="toggleTag(this)">안전한 거래장소</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 서비스 만족도 -->
+                            <div class="survey-card">
+                                <div class="section-title">
+                                    🥕 캠퍼스당근 서비스 평가
+                                </div>
+                                
+                                <div class="rating-section">
+                                    <div class="rating-label">서비스 전반적인 만족도는?</div>
+                                    <div class="emoji-rating">
+                                        <div class="emoji-option" onclick="selectEmoji(this, 1)">
+                                            <div class="emoji">😢</div>
+                                            <div class="emoji-label">불만족</div>
+                                        </div>
+                                        <div class="emoji-option" onclick="selectEmoji(this, 2)">
+                                            <div class="emoji">😐</div>
+                                            <div class="emoji-label">보통</div>
+                                        </div>
+                                        <div class="emoji-option" onclick="selectEmoji(this, 3)">
+                                            <div class="emoji">😊</div>
+                                            <div class="emoji-label">만족</div>
+                                        </div>
+                                        <div class="emoji-option" onclick="selectEmoji(this, 4)">
+                                            <div class="emoji">😍</div>
+                                            <div class="emoji-label">매우만족</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rating-section">
+                                    <div class="rating-label">앱 사용 편의성은?</div>
+                                    <div class="star-rating" data-rating="usability">
+                                        <span class="star" data-value="1">⭐</span>
+                                        <span class="star" data-value="2">⭐</span>
+                                        <span class="star" data-value="3">⭐</span>
+                                        <span class="star" data-value="4">⭐</span>
+                                        <span class="star" data-value="5">⭐</span>
+                                    </div>
+                                    <div class="rating-text" id="usabilityRatingText">별점을 선택해주세요</div>
+                                </div>
+                            </div>
+
+                            <!-- 추가 의견 -->
+                            <div class="survey-card">
+                                <div class="section-title">
+                                    💭 추가 의견
+                                </div>
+                                
+                                <div class="textarea-group">
+                                    <label class="textarea-label">개선사항이나 의견을 자유롭게 적어주세요</label>
+                                    <textarea 
+                                        class="feedback-textarea" 
+                                        placeholder="서비스 개선을 위한 소중한 의견을 들려주세요..."
+                                        maxlength="500"
+                                        oninput="updateCharCount(this)"
+                                    ></textarea>
+                                    <div class="char-count">0 / 500</div>
+                                </div>
+                            </div>
+
+                            <!-- 제출 버튼 -->
+                            <button class="btn-primary1" onclick="submitSurvey()">
+                                평가 완료하기
+                            </button>
+                            <button class="btn-secondary" onclick="skipSurvey()">
+                                나중에 하기
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 완료 화면 -->
+                    <div class="completion-screen" id="completionScreen">
+                        <div class="completion-icon">✅</div>
+                        <div class="completion-title">평가해주셔서 감사합니다!</div>
+                        <div class="completion-subtitle">소중한 의견이 서비스 개선에 도움이 됩니다</div>
+                        <button class="btn-primary1" onclick="goToMain()" style="max-width: 200px;">
+                            메인으로 돌아가기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 하단 네비게이션 -->
+                <div class="bottom-nav" id="bottomNav" style="display: none;">
+                    <div class="nav-item active" onclick="setActiveNav(0); showMain()">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">홈</div>
+                    </div>
+                    <div class="nav-item" onclick="setActiveNav(1); showProductList()">
+                        <div class="nav-icon">🔍</div>
+                        <div class="nav-label">검색</div>
+                    </div>
+                    <div class="nav-item" onclick="setActiveNav(2); showToast('채팅 기능 준비중입니다')">
+                        <div class="nav-icon">💬</div>
+                        <div class="nav-label">채팅</div>
+                    </div>
+                    <div class="nav-item" onclick="setActiveNav(3); showToast('프로필 기능 준비중입니다')">
+                        <div class="nav-icon">👤</div>
+                        <div class="nav-label">프로필</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 전역 변수
+        let currentScreen = 'auth';
+        let currentTradeStep = 1;
+        let currentTradeType = null;
+
+        // 만족도 조사 관련 변수
+        let partnerRating = 0;
+        let usabilityRating = 0;
+        let serviceRating = 0;
+        let selectedTags = [];
+        let selectedProduct = null;
+
+        // 샘플 상품 데이터
+        const sampleProducts = [
+            {id: 1, title: "아이폰 14 프로", price: "800,000원", location: "공학관", emoji: "📱"},
+            {id: 2, title: "맥북 프로 M1", price: "1,200,000원", location: "중앙도서관", emoji: "💻"},
+            {id: 3, title: "에어팟 프로", price: "180,000원", location: "학생회관", emoji: "🎧"},
+            {id: 4, title: "아이패드 에어", price: "450,000원", location: "기숙사", emoji: "📱"},
+            {id: 5, title: "나이키 운동화", price: "120,000원", location: "체육관", emoji: "👟"},
+            {id: 6, title: "노트북 거치대", price: "35,000원", location: "공학관", emoji: "🖥️"},
+            {id: 7, title: "백팩", price: "80,000원", location: "학생회관", emoji: "🎒"},
+            {id: 8, title: "스위치 게임", price: "45,000원", location: "기숙사", emoji: "🎮"}
+        ];
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 60000); // 1분마다 시간 업데이트
+            generateProducts();
+            initSatisfactionRating();
+        });
+
+        // 시간 업데이트
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 화면 전환 함수
+        function switchScreen(fromScreen, toScreen) {
+            const from = document.getElementById(fromScreen);
+            const to = document.getElementById(toScreen);
+            
+            from.classList.add('hidden');
+            to.classList.remove('hidden');
+            
+            setTimeout(() => {
+                to.classList.add('fade-in');
+            }, 50);
+            
+            currentScreen = toScreen.replace('Screen', '');
+        }
+
+        // 로그인
+        function login() {
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.textContent;
+            
+            btn.innerHTML = '<span class="loading"></span> 로그인 중...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                switchScreen('authScreen', 'mainScreen');
+                document.getElementById('bottomNav').style.display = 'flex';
+                showToast('로그인 성공! 환영합니다 🎉');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        // 회원가입 화면 표시
+        function showRegister() {
+            switchScreen('authScreen', 'registerScreen');
+        }
+
+        // 로그인 화면으로 돌아가기
+        function showAuth() {
+            switchScreen('registerScreen', 'authScreen');
+        }
+
+        // 회원가입
+        function register() {
+            showToast('회원가입 완료! 로그인해주세요');
+            setTimeout(() => {
+                showAuth();
+            }, 1500);
+        }
+
+        // 메인 화면 표시
+        function showMain() {
+            switchScreen(currentScreen + 'Screen', 'mainScreen');
+            currentScreen = 'main';
+        }
+
+        // 상품 목록 화면 표시
+        function showProductList() {
+            switchScreen(currentScreen + 'Screen', 'productListScreen');
+            currentScreen = 'productList';
+        }
+
+        // 상품 생성
+        function generateProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            
+            sampleProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.onclick = () => selectProduct(product);
+                
+                productCard.innerHTML = `
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-info">
+                        <div class="product-title">${product.title}</div>
+                        <div class="product-price">${product.price}</div>
+                        <div class="product-location">${product.location}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(productCard);
+            });
+        }
+
+        // 상품 검색
+        function searchProducts(query) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            
+            const filteredProducts = sampleProducts.filter(product => 
+                product.title.toLowerCase().includes(query.toLowerCase()) ||
+                product.location.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            filteredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.onclick = () => selectProduct(product);
+                
+                productCard.innerHTML = `
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-info">
+                        <div class="product-title">${product.title}</div>
+                        <div class="product-price">${product.price}</div>
+                        <div class="product-location">${product.location}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(productCard);
+            });
+            
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">검색 결과가 없습니다</div>';
+            }
+        }
+
+        // 상품 선택
+        function selectProduct(product) {
+            selectedProduct = product; // 선택된 상품 저장
+            showToast(`${product.title} 상품을 선택했습니다`);
+            setTimeout(() => {
+                currentTradeType = 'buyer';
+                showTradeFlow('buyer');
+            }, 1000);
+        }
+
+        // 판매자 플로우
+        function showSellerFlow() {
+            currentTradeType = 'seller';
+            // 판매자의 경우 신규 등록 상품으로 설정
+            selectedProduct = {title: "신규 등록 상품", emoji: "📦"};
+            showTradeFlow('seller');
+        }
+
+        // 거래 방식 선택
+        function selectTradeMethod(method) {
+            const methodNames = {
+                'smart': '스마트 계약 에스크로',
+                'direct': '직접 거래',
+                'escrow': '입금 약속'
+            };
+            
+            showToast(`${methodNames[method]} 방식을 선택했습니다`);
+            
+            setTimeout(() => {
+                // 상품이 선택되지 않은 경우 기본값 설정
+                if (!selectedProduct) {
+                    selectedProduct = {title: "일반 상품", emoji: "📦"};
+                }
+                showTradeFlow(currentTradeType || 'general');
+            }, 1000);
+        }
+
+        // 거래 과정 화면 표시
+        function showTradeFlow(type) {
+            switchScreen(currentScreen + 'Screen', 'tradeScreen');
+            currentScreen = 'trade';
+            
+            const title = type === 'seller' ? '판매 진행 상황' : 
+                         type === 'buyer' ? '구매 진행 상황' : '거래 진행 상황';
+            
+            document.getElementById('tradeTitle').textContent = title;
+            updateTradeStep(1);
+            generateTradeSteps(type);
+        }
+
+        // 거래 단계 업데이트
+        function updateTradeStep(step) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            const percentage = (step / 3) * 100;
+            progressFill.style.width = percentage + '%';
+            progressText.textContent = `${step}/3 단계 완료`;
+            
+            currentTradeStep = step;
+        }
+
+        // 거래 단계 생성
+        function generateTradeSteps(type) {
+            const stepContent = document.getElementById('stepContent');
+            stepContent.innerHTML = '';
+            
+            const steps = [
+                {
+                    number: 1,
+                    title: '신원 인증',
+                    description: '학교 이메일 인증이 완료되었습니다.',
+                    items: [
+                        {text: '📧 학교 이메일 인증', status: 'complete'},
+                        {text: '📱 휴대폰 번호 인증', status: 'complete'}
+                    ]
+                },
+                {
+                    number: 2,
+                    title: type === 'seller' ? '상품 등록' : '거래 조건 설정',
+                    description: type === 'seller' ? '상품 정보를 등록해주세요.' : '거래 방식과 조건을 설정해주세요.',
+                    items: [
+                        {text: type === 'seller' ? '📸 상품 사진 업로드' : '🔒 에스크로 설정', status: 'pending'},
+                        {text: type === 'seller' ? '📝 상품 설명 작성' : '📍 GPS 위치 설정', status: 'pending'}
+                    ]
+                },
+                {
+                    number: 3,
+                    title: '거래 완료',
+                    description: '상호 평가 후 거래가 완료됩니다.',
+                    items: [
+                        {text: '📷 물품 확인 사진', status: 'waiting'},
+                        {text: '⭐ 상호 평가', status: 'waiting'}
+                    ]
+                }
+            ];
+            
+            steps.forEach((step, index) => {
+                const stepCard = document.createElement('div');
+                stepCard.className = 'step-card';
+                
+                let itemsHtml = '';
+                step.items.forEach(item => {
+                    const icon = item.status === 'complete' ? '✅' : 
+                                item.status === 'pending' ? '⏳' : '⭕';
+                    const iconClass = item.status === 'complete' ? 'check-icon' : 
+                                     item.status === 'pending' ? 'pending-icon' : '';
+                    
+                    itemsHtml += `
+                        <div class="verification-item">
+                            <span>${item.text}</span>
+                            <span class="${iconClass}">${icon}</span>
+                        </div>
+                    `;
+                });
+                
+                stepCard.innerHTML = `
+                    <div class="step-number">${step.number}</div>
+                    <h3>${step.title}</h3>
+                    <p style="color: #666; margin: 10px 0;">${step.description}</p>
+                    ${itemsHtml}
+                `;
+                
+                // 단계 2에 버튼 추가
+                if (step.number === 2) {
+                    const button = document.createElement('button');
+                    button.className = 'btn-primary';
+                    button.style = 'margin-top: 15px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: none;';
+                    button.textContent = step.number === 2 ? '다음 단계로' : '완료하기';
+                    button.onclick = () => nextStep();
+                    stepCard.appendChild(button);
+                }
+                
+                stepContent.appendChild(stepCard);
+            });
+            
+            // 돌아가기 버튼
+            const backButton = document.createElement('button');
+            backButton.className = 'btn-primary';
+            backButton.style = 'margin-top: 30px; background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%); border: none;';
+            backButton.textContent = '이전으로 돌아가기';
+            backButton.onclick = () => showMain();
+            stepContent.appendChild(backButton);
+        }
+
+        // 다음 단계
+        function nextStep() {
+            if (currentTradeStep < 3) {
+                const nextStep = currentTradeStep + 1;
+                updateTradeStep(nextStep);
+                showToast(`${nextStep}단계로 진행되었습니다`);
+                
+                // 2단계를 완료로 업데이트
+                const stepCards = document.querySelectorAll('.step-card');
+                if (stepCards[1]) {
+                    const pendingItems = stepCards[1].querySelectorAll('.pending-icon');
+                    pendingItems.forEach(item => {
+                        item.textContent = '✅';
+                        item.className = 'check-icon';
+                    });
+                }
+                
+                // 3단계 활성화
+                if (nextStep === 3) {
+                    const waitingItems = stepCards[2].querySelectorAll('.verification-item span:last-child');
+                    waitingItems.forEach(item => {
+                        if (item.textContent === '⭕') {
+                            item.textContent = '⏳';
+                            item.className = 'pending-icon';
+                        }
+                    });
+                    
+                    // 완료 버튼 추가
+                    setTimeout(() => {
+                        const completeButton = document.createElement('button');
+                        completeButton.className = 'btn-primary';
+                        completeButton.style = 'margin-top: 15px; background: linear-gradient(135deg, #059669 0%, #0d9488 100%); border: none;';
+                        completeButton.textContent = '거래 완료하기';
+                        completeButton.onclick = () => completeTransaction();
+                        stepCards[2].appendChild(completeButton);
+                    }, 1000);
+                }
+            }
+        }
+
+        // 거래 완료 (만족도 조사로 이동)
+        function completeTransaction() {
+            showToast('거래가 완료되었습니다! 🎉');
+            setTimeout(() => {
+                updateTradeInfo(); // 거래 정보 업데이트
+                switchScreen('tradeScreen', 'satisfactionScreen');
+                currentScreen = 'satisfaction';
+            }, 2000);
+        }
+
+        // 거래 정보 업데이트
+        function updateTradeInfo() {
+            if (selectedProduct) {
+                const tradeItem = document.querySelector('.trade-item');
+                const tradeUser = document.querySelector('.trade-user');
+                
+                tradeItem.textContent = `${selectedProduct.emoji} ${selectedProduct.title}`;
+                tradeUser.textContent = '판매자: 김철수님';
+            }
+        }
+
+        // 만족도 조사 별점 평가 초기화
+        function initSatisfactionRating() {
+            document.querySelectorAll('.star-rating').forEach(ratingContainer => {
+                const stars = ratingContainer.querySelectorAll('.star');
+                const ratingType = ratingContainer.getAttribute('data-rating');
+                
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', () => {
+                        const rating = index + 1;
+                        updateStarRating(ratingContainer, rating, ratingType);
+                    });
+                    
+                    star.addEventListener('mouseover', () => {
+                        highlightStars(ratingContainer, index + 1);
+                    });
+                });
+                
+                ratingContainer.addEventListener('mouseleave', () => {
+                    const currentRating = ratingType === 'partner' ? partnerRating : usabilityRating;
+                    highlightStars(ratingContainer, currentRating);
+                });
+            });
+        }
+
+        function highlightStars(container, rating) {
+            const stars = container.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+        }
+
+        function updateStarRating(container, rating, type) {
+            const textElement = document.getElementById(type + 'RatingText');
+            const ratingTexts = {
+                1: '아쉬워요 😞',
+                2: '별로예요 😐', 
+                3: '괜찮아요 🙂',
+                4: '좋아요 😊',
+                5: '최고예요! 😍'
+            };
+            
+            if (type === 'partner') {
+                partnerRating = rating;
+            } else if (type === 'usability') {
+                usabilityRating = rating;
+            }
+            
+            highlightStars(container, rating);
+            textElement.textContent = ratingTexts[rating];
+            
+            // 애니메이션 효과
+            textElement.style.transform = 'scale(1.1)';
+            textElement.style.color = '#4f46e5';
+            setTimeout(() => {
+                textElement.style.transform = 'scale(1)';
+                textElement.style.color = '#666';
+            }, 300);
+        }
+
+        // 이모지 선택
+        function selectEmoji(element, rating) {
+            // 모든 이모지 옵션에서 selected 클래스 제거
+            document.querySelectorAll('.emoji-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 선택된 옵션에 selected 클래스 추가
+            element.classList.add('selected');
+            serviceRating = rating;
+            
+            // 피드백 효과
+            element.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // 태그 토글
+        function toggleTag(element) {
+            element.classList.toggle('selected');
+            const tagText = element.textContent;
+            
+            if (element.classList.contains('selected')) {
+                selectedTags.push(tagText);
+            } else {
+                selectedTags = selectedTags.filter(tag => tag !== tagText);
+            }
+        }
+
+        // 글자 수 카운트
+        function updateCharCount(textarea) {
+            const charCount = textarea.value.length;
+            const charCountElement = textarea.parentElement.querySelector('.char-count');
+            charCountElement.textContent = `${charCount} / 500`;
+            
+            if (charCount > 450) {
+                charCountElement.style.color = '#dc2626';
+            } else {
+                charCountElement.style.color = '#666';
+            }
+        }
+
+        // 설문 제출
+        function submitSurvey() {
+            // 필수 항목 검증
+            if (partnerRating === 0) {
+                showToast('거래 상대방 평가를 해주세요');
+                return;
+            }
+            
+            if (serviceRating === 0) {
+                showToast('서비스 만족도를 선택해주세요');
+                return;
+            }
+            
+            // 제출 처리
+            showToast('평가를 제출하고 있습니다...');
+            
+            setTimeout(() => {
+                // 완료 화면으로 전환
+                document.getElementById('satisfactionScreen').style.display = 'none';
+                document.getElementById('completionScreen').style.display = 'flex';
+            }, 1500);
+        }
+
+        // 설문 건너뛰기
+        function skipSurvey() {
+            if (confirm('정말 평가를 건너뛰시겠습니까?\n소중한 의견이 서비스 개선에 도움이 됩니다.')) {
+                goToMain();
+            }
+        }
+
+        // 메인으로 돌아가기
+        function goToMain() {
+            showToast('메인 화면으로 이동합니다');
+            setTimeout(() => {
+                showMain();
+                // 평가 초기화
+                partnerRating = 0;
+                usabilityRating = 0;
+                serviceRating = 0;
+                selectedTags = [];
+                selectedProduct = null; // 선택된 상품 초기화
+                updateTradeStep(1);
+                
+                // 화면 상태 리셋
+                document.getElementById('satisfactionScreen').style.display = '';
+                document.getElementById('completionScreen').style.display = 'none';
+                
+                // 별점과 이모지 선택 상태 초기화
+                resetSatisfactionForm();
+            }, 1000);
+        }
+
+        // 만족도 조사 폼 초기화
+        function resetSatisfactionForm() {
+            // 모든 별점 초기화
+            document.querySelectorAll('.star-rating .star').forEach(star => {
+                star.classList.remove('active');
+            });
+            
+            // 별점 텍스트 초기화
+            document.getElementById('partnerRatingText').textContent = '별점을 선택해주세요';
+            document.getElementById('usabilityRatingText').textContent = '별점을 선택해주세요';
+            
+            // 이모지 선택 초기화
+            document.querySelectorAll('.emoji-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 태그 선택 초기화
+            document.querySelectorAll('.tag-item').forEach(tag => {
+                tag.classList.remove('selected');
+            });
+            
+            // 텍스트에리어 초기화
+            const textarea = document.querySelector('.feedback-textarea');
+            if (textarea) {
+                textarea.value = '';
+                updateCharCount(textarea);
+            }
+        }
+
+        // 하단 네비게이션 활성화
+        function setActiveNav(index) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+
+        // 토스트 메시지 표시
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 키보드 이벤트 (Enter로 로그인)
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && currentScreen === 'auth') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
